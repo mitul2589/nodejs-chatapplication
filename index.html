@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>Socket.IO chat</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font: 13px Helvetica, Arial;
+    }
+    
+    #form1 {
+      background: #000;
+      padding: 3px;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+    
+    #form1 input {
+      border: 0;
+      padding: 10px;
+      width: 90%;
+      margin-right: .5%;
+    }
+    
+    #form1 button {
+      width: 9%;
+      background: rgb(130, 224, 255);
+      border: none;
+      padding: 10px;
+    }
+    
+    #messages {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+    }
+    
+    #messages li {
+      padding: 5px 10px;
+    }
+    
+    #messages li:nth-child(odd) {
+      background: #eee;
+    }
+    
+    #messages {
+      margin-bottom: 40px
+    }
+  </style>
+</head>
+
+<body>
+
+  
+  <div id="board">
+    <ul id="messages"></ul>
+  </div>
+  <form id="form1" action="">
+    <input id="m" autocomplete="off" /><button>Send</button>
+  </form>
+  <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+  <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+
+  <script>
+    $(function () {
+      
+      var socket = io();
+      var person = prompt('please enter user name') || 'Anonyomous';
+      if(person) {
+        socket.emit('newuser', person);
+      }
+
+      $('#m').focus(); 
+
+      $('#form1').submit(function () {
+        socket.emit('chat message', $('#m').val(), person);
+        $('#m').val('');
+        $('div.person'+ person).remove();
+        return false;
+      });
+
+      $('#m').keypress(function(e) {
+          if(e.key !== 'Enter') {
+              socket.emit('usertyping', person);
+          }
+      })
+
+      socket.on('chat message', function (msg, username) {
+        $('#messages').append($('<li>').html('<strong>' + username + ':</strong> ' + msg));
+        $('div.person'+ username).remove();
+        window.scrollTo(0, document.body.scrollHeight);
+      });
+
+      socket.on('newuser', function (username) {
+        $('#board ul').append('<span>' + username + 'connected</span>');
+      });
+
+      socket.on('usertyping', function (username) {
+        if (!$('div').hasClass('person' + username)) {
+            
+            $('#board').append($('<div>').addClass('person' + username).text(username + ' is typing'));
+        }
+      });
+
+    });
+
+  </script>
+
+
+</body>
+
+</html>
